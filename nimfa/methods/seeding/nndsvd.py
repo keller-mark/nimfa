@@ -28,7 +28,7 @@ class Nndsvd(object):
     def __init__(self):
         self.name = "nndsvd"
 
-    def initialize(self, V, rank, options):
+    def initialize(self, V, rank, options, random_state=None):
         """
         Return initialized basis and mixture matrix. 
         
@@ -56,6 +56,8 @@ class Nndsvd(object):
                 (NNDSVDa and NNDSVDar eliminate zero elements, therefore the matrix is
                 not sparse anymore).
         :type options: `dict`
+        :param random_state: The random state to pass to np.random.RandomState()
+        :type random_state: `int`
         """
         self.rank = rank
         self.flag = options.get('flag', 0)
@@ -64,7 +66,7 @@ class Nndsvd(object):
         U, S, E = svd(V)
         E = E.T
         if sp.isspmatrix(U):
-            return self.init_sparse(V, U, S, E)
+            return self.init_sparse(V, U, S, E, random_state)
         self.W = np.mat(np.zeros((V.shape[0], self.rank)))
         self.H = np.mat(np.zeros((self.rank, V.shape[1])))
         # choose the first singular triplet to be nonnegative
@@ -113,7 +115,7 @@ class Nndsvd(object):
             self.H[self.H == 0] = avg * np.random.uniform(n2, 1) / 100
         return self.W, self.H
 
-    def init_sparse(self, V, U, S, E):
+    def init_sparse(self, V, U, S, E, random_state=None):
         """
         Continue the NNDSVD initialization of sparse target matrix.
         
@@ -125,13 +127,15 @@ class Nndsvd(object):
         :type E: :class:`scipy.sparse` of format csr, csc, coo, bsr, dok, lil, dia
         :param S: Singular values.
         :type S: :class:`scipy.sparse` of format csr, csc, coo, bsr, dok, lil, dia
+        :param random_state: The random state to pass to np.random.RandomState()
+        :type random_state: `int`
         """
         # LIL sparse format is convenient for construction
         self.W = sp.lil_matrix((V.shape[0], self.rank))
         self.H = sp.lil_matrix((self.rank, V.shape[1]))
         # scipy.sparse.linalg ARPACK does not allow computation of rank(V) eigenvectors
         # fill the missing columns/rows with random values
-        prng = np.random.RandomState()
+        prng = np.random.RandomState(random_state)
         S = [S[i, i] for i in range(np.min([S.shape[0], S.shape[1]]))]
         S += [prng.rand() for _ in range(self.rank - len(S))]
         U = U.tolil()

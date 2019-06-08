@@ -20,7 +20,7 @@ class Random(object):
     def __init__(self):
         self.name = "random"
 
-    def initialize(self, V, rank, options):
+    def initialize(self, V, rank, options, random_state=None):
         """
         Return initialized basis and mixture matrix (and additional factors if
         specified in :param:`Sn`, n = 1, 2, ..., k).
@@ -42,6 +42,8 @@ class Random(object):
                 full matrix, density of 0 means a matrix with no nonzero items. Default value is 0.7.
                 Density parameter is applied only if passed target ``V`` is an instance of one :class:`scipy.sparse` sparse types.
         :type options: `dict`
+        :param random_state: The random state to pass to np.random.RandomState()
+        :type random_state: `int`
         """
         self.rank = rank
         self.density = options.get('density', 0.7)
@@ -51,7 +53,7 @@ class Random(object):
             gen = self.gen_sparse
         else:
             self.max = V.max()
-            self.prng = np.random.RandomState()
+            self.prng = np.random.RandomState(random_state)
             gen = self.gen_dense
         self.W = gen(V.shape[0], self.rank)
         self.H = gen(self.rank, V.shape[1])

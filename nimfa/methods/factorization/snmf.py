@@ -147,12 +147,15 @@ class Snmf(nmf_std.Nmf_std):
     :param test_conv: It indicates how often convergence test is done. By
        default convergence is tested each iteration.
     :type test_conv: `int`
+
+    :param random_state: The random state to pass to np.random.RandomState()
+    :type random_state: `int`
     """
     def __init__(self, V, seed=None, W=None, H=None, H1=None,
                  rank=30, max_iter=30, min_residuals=1e-5, test_conv=None,
                  n_run=1, callback=None, callback_init=None, track_factor=False,
                  track_error=False, version='r', eta=None, beta=1e-4,
-                 i_conv=10, w_min_change=0, **options):
+                 i_conv=10, w_min_change=0, random_state=None, **options):
         self.name = "snmf"
         self.aseeds = ["random", "fixed", "nndsvd", "random_c", "random_vcol"]
         nmf_std.Nmf_std.__init__(self, vars())
@@ -163,6 +166,7 @@ class Snmf(nmf_std.Nmf_std):
         self.min_residuals = 1e-4 if not self.min_residuals else self.min_residuals
         self.tracker = mf_track.Mf_track() if self.track_factor and self.n_run > 1 \
                                               or self.track_error else None
+        self.random_state = random_state
 
     def factorize(self):
         """
@@ -179,7 +183,7 @@ class Snmf(nmf_std.Nmf_std):
                 self.V = self.V.T
             
             self.W, self.H = self.seed.initialize(
-                self.V, self.rank, self.options)
+                self.V, self.rank, self.options, self.random_state)
             if sp.isspmatrix(self.W):
                 self.W = self.W.tolil()
             if sp.isspmatrix(self.H):
@@ -292,7 +296,7 @@ class Snmf(nmf_std.Nmf_std):
             self.idx_w_old = np.mat(np.zeros((self.V.shape[0], 1)))
             self.idx_h_old = np.mat(np.zeros((1, self.V.shape[1])))
             self.inc = 0
-            self.W, _ = self.seed.initialize(self.V, self.rank, self.options)
+            self.W, _ = self.seed.initialize(self.V, self.rank, self.options, self.random_state)
             # normalize W and convert to lil
             w_c = sop(multiply(self.W, self.W).sum(axis=0), op=np.sqrt)
             if sp.issparse(self.W):

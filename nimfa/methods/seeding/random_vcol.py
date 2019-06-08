@@ -27,7 +27,7 @@ class Random_vcol(object):
     def __init__(self):
         self.name = "random_vcol"
 
-    def initialize(self, V, rank, options):
+    def initialize(self, V, rank, options, random_state=None):
         """
         Return initialized basis and mixture matrix. Initialized matrices are of
         the same type as passed target matrix.
@@ -47,11 +47,13 @@ class Random_vcol(object):
                 Option ``p_r`` represent the number of rows of target matrix used to
                 average the row of basis matrix. Default value for ``p_r`` is 1/5 * (target.shape[0]).
         :type options: `dict`
+        :param random_state: The random state to pass to np.random.RandomState()
+        :type random_state: `int`
         """
         self.rank = rank
         self.p_c = options.get('p_c', int(ceil(1. / 5 * V.shape[1])))
         self.p_r = options.get('p_r', int(ceil(1. / 5 * V.shape[0])))
-        self.prng = np.random.RandomState()
+        self.prng = np.random.RandomState(random_state)
         if sp.isspmatrix(V):
             self.W = sp.lil_matrix((V.shape[0], self.rank))
             self.H = sp.lil_matrix((self.rank, V.shape[1]))

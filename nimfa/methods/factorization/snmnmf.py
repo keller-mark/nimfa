@@ -181,12 +181,15 @@ class Snmnmf(nmf_mm.Nmf_mm):
     :param test_conv: It indicates how often convergence test is done. By
        default convergence is tested each iteration.
     :type test_conv: `int`
+
+    :param random_state: The random state to pass to np.random.RandomState()
+    :type random_state: `int`
     """
     def __init__(self, V, V1, seed=None, W=None, H=None, H1=None,
                  rank=30, max_iter=30, min_residuals=1e-5, test_conv=None,
                  n_run=1, callback=None, callback_init=None, track_factor=False,
                  track_error=False, A=None, B=None, gamma=0.01, gamma_1=0.01,
-                 lamb=0.01, lamb_1=0.01, **options):
+                 lamb=0.01, lamb_1=0.01, random_state=None, **options):
         self.name = "snmnmf"
         self.aseeds = ["random", "fixed", "nndsvd", "random_c", "random_vcol"]
         nmf_mm.Nmf_mm.__init__(self, vars())
@@ -198,6 +201,7 @@ class Snmnmf(nmf_mm.Nmf_mm):
         self.B = self.B.tocsr() if sp.isspmatrix(self.B) else np.mat(self.B)
         self.tracker = mf_track.Mf_track() if self.track_factor and self.n_run > 1 \
                                               or self.track_error else None
+        self.random_state = random_state
 
     def factorize(self):
         """
@@ -212,9 +216,9 @@ class Snmnmf(nmf_mm.Nmf_mm):
         for run in range(self.n_run):
             self.options.update({'idx': 0})
             self.W, self.H = self.seed.initialize(
-                self.V, self.rank, self.options)
+                self.V, self.rank, self.options, self.random_state)
             self.options.update({'idx': 1})
-            _, self.H1 = self.seed.initialize(self.V1, self.rank, self.options)
+            _, self.H1 = self.seed.initialize(self.V1, self.rank, self.options, self.random_state)
             self.options.pop('idx')
             p_obj = c_obj = sys.float_info.max
             best_obj = c_obj if run == 0 else best_obj

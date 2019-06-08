@@ -124,11 +124,14 @@ class Pmfcc(smf.Smf):
     :param test_conv: It indicates how often convergence test is done. By
        default convergence is tested each iteration.
     :type test_conv: `int`
+
+    :param random_state: The random state to pass to np.random.RandomState()
+    :type random_state: `int`
     """
     def __init__(self, V, seed=None, W=None, H=None, rank=30, max_iter=30,
                  min_residuals=1e-5, test_conv=None, n_run=1, callback=None,
                  callback_init=None, track_factor=False, track_error=False,
-                 Theta=None, **options):
+                 Theta=None, random_state=None, **options):
         self.name = "pmfcc"
         self.aseeds = ["random", "fixed", "nndsvd", "random_c", "random_vcol"]
         smf.Smf.__init__(self, vars())
@@ -136,6 +139,7 @@ class Pmfcc(smf.Smf):
             self.Theta = np.mat(np.zeros((self.V.shape[1], self.V.shape[1])))
         self.tracker = mf_track.Mf_track() if self.track_factor and self.n_run > 1 \
                                               or self.track_error else None
+        self.random_state = random_state
 
     def factorize(self):
         """
@@ -149,7 +153,7 @@ class Pmfcc(smf.Smf):
         for run in range(self.n_run):
             # [FWang2008]_; H = G.T, W = F (Table 2)
             self.W, self.H = self.seed.initialize(
-                self.V, self.rank, self.options)
+                self.V, self.rank, self.options, self.random_state)
             p_obj = c_obj = sys.float_info.max
             best_obj = c_obj if run == 0 else best_obj
             iter = 0

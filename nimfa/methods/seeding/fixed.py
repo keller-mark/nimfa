@@ -28,7 +28,7 @@ class Fixed(object):
                 factors.pop(k)
         self.__dict__.update(factors)
 
-    def initialize(self, V, rank, options):
+    def initialize(self, V, rank, options, random_state=None):
         """
         Return fixed initialized matrix factors.
         
@@ -44,6 +44,8 @@ class Fixed(object):
                 and corresponds to a factorization model with one mixture matrix (e.g. standard, nonsmooth
                 model).
         :type options: `dict`
+        :param random_state: The random state to pass to np.random.RandomState()
+        :type random_state: `int`
         """
         self.idx = options.get('idx', 0)
         if self.idx == 0:
